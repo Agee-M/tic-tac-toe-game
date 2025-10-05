@@ -1,7 +1,12 @@
 # TODO: Tic-tac-toe game implementation
 
 def game():
-    start()
+    board = start()
+    board[2][2] = 'X'
+    print_board(board)
+
+
+    return
 
 
 def start():
@@ -9,10 +14,12 @@ def start():
     
     # Initialize new board
     board = new_board()
-    print_board(board) # DEBUG
 
-    #Initialize players
+    # Initialize players
     # player()
+
+    # Return board to game
+    return board
 
 def player():
     # Assign player names and characters
@@ -49,13 +56,18 @@ def score():
 
 def new_board():
     # Creates 3 x 3 matrix
-    board = [['.'] * 3] * 3
-
+    board = [['.'] * 3 for _ in range(3)]
     
     return board
 
 def print_board(board):
-    print(board) # DEBUG
+    # Formats board
+    for row1 in board[:1]:
+        print(" ".join(row1))
+    for row2 in board[1:2]:
+        print(" ".join(row2))
+    for row3 in board[2:]:
+        print(" ".join(row3))
 
 def end():
     pass
