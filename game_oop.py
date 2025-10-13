@@ -9,29 +9,21 @@ class Board():
         if board_size < 3:
             board_size = 3
         self.board = [["."] * board_size for i in range(board_size)]
-        self.valid_moves = [i for i in range(1, (board_size * board_size) + 1)]
 
-    # Spot validator
-    def is_valid(self, choice: int) -> bool:
-        if choice in self.valid:
+    # Validate move on board
+    def is_valid(self, choice: list[int, int]) -> bool:
+        if self.board[choice[0]][choice[1]] == '.':
             return True
         return False
-    
-    # Valid updater
-    def update_valid(self, choice: int):
-        for i, val in enumerate(self.valid):
-            if val == choice:
-                self.valid.pop(i)
-                return
             
     # Make move
-    def make_move(self, choice: int, symbol: str):
+    def make_move(self, choice: list[int, int], symbol: str):
 
         # Check for invalid move     
         if not self.is_valid(choice):
             print("Invalid choice")
             print()
-            return
+            return 
         
         # Update board
         self.update_board(choice, symbol)
@@ -47,24 +39,36 @@ class Board():
         return False
 
     # Check win
-    def check_win(self, symbol: str) -> bool:
+    def is_win(self, symbol: str) -> bool:
         size = len(self.board)
+        
         # Check rows
         win = True
         for r in range(size):
             for c in range(size):
-                if self.board[r][c] == self.board[r][c] == symbol:
+                if self.board[r][c] == symbol:
                     pass
                 else:
                     win = False
-            # TODO: Fix iterations
-            
-       
-            
+                    break
+
+        # Row win condition met
+        if win:
+            return True
+    
         # Check columns
+        win = True
         for c in range(size):
-            if self.board[0][c] == self.board[1][c] == self.board[2][c] == symbol:
-                return True
+            for r in range(size):
+                if self.board[r][c] == symbol:
+                    pass
+                else:
+                    win = False
+                    break
+
+        # Column win condition met
+        if win:
+            return True
     
         # Diagonal Algorithms   
         # Check \
@@ -77,7 +81,7 @@ class Board():
             if not win:
                 break
 
-        # Win condition met
+        # Diagonal 1 win condition met
         if win:
             return True
         
@@ -93,9 +97,12 @@ class Board():
             else:
                 win = False
                 break
+        
+        # Diagonal 2 win condition met
+        if win:
+            return True
 
-        # Win condition met
-        return win
+        return False
 
     # Print board
     def print_board(self):
@@ -104,16 +111,15 @@ class Board():
 class Player():
     
     def __init__(self):
-        self.player = 0
         self.name = ''
         self.symbol = ''
-        self.turn = None
-        self.human = True
+        self.is_turn = None
+        self.is_human = True
 
-    # Single player
+    # Set computer player (single player)
     def set_computer(self):
         self.name = 'Khaleesi_AI'
-        self.human = False
+        self.is_human = False
 
 class Game():
 
@@ -121,53 +127,152 @@ class Game():
 
     def __init__(self):
         self.game_board = Board()
-        self.player1 = Player()
-        self.player2 = Player()
+        self.board_positions = {}
+        self.player1 = Player(1)
+        self.player2 = Player(2)
 
-    # Generate computer move
-    def random_move(self) -> int:
-        while True:
-            choice = str(random.randrange(1, 10))
-            if choice in self.valid:
-                return choice
+        self.init_board_positions() 
 
-    # Convert board size to position_conv dict
-    def board_to_choice(self) -> dict[int, int]:
+    # Initialize board positions for game
+    def init_board_positions(self):
         size = len(self.game_board.board)
-        position_conv = {}
+        self.board_positions = {}
         row_ind = 0
         col_ind = 0
         for i in range(1, (size * size) + 1):   
             matrix = [row_ind, col_ind]
-            position_conv[str(i)] = matrix
+            self.board_positions[str(i)] = matrix
             if i % size == 0:
                 row_ind += 1
                 col_ind = 0
             else:
                 col_ind += 1
-        return position_conv
+
+    # Generate computer move
+    def random_move(self) -> int:
+        while True:
+
+            # BUG: Possible issue with randrange and what is_valid() accepts
+            # Check if is_valid accepts 0-9 or 1-10
+            choice = str(random.randrange(1, len(self.board) * len(self.board) + 1))
+            if self.game_board.is_valid(choice):
+                return choice
+            
+
+    # Converts choice to board coordinates
+    def choice_to_board(self, choice: str) -> dict[int, int]:
+        return self.board_positions[choice]
     
-    def choice_to_board(self, choice: str, position_conv: dict[int, int]) -> list[int, int]:
-        return position_conv[choice]
+    # Reset game
+    def reset(self):
+        self.board = Board()
 
-    # Ask for user input
+    # Swap players
+    def swap_turns(self):
+        self.player1.is_turn = False if self.player1.is_turn else True
+        self.player2.is_turn = False if self.player2.is_turn else True
+        
 
-    # Return tuple of selection location 
+    # Set up players
+    def player_setup(self):
 
+        print("Welcome to tic-tac-toe!")
+        print()
+        
+        # Prompt for 1 or 2 players (game-mode)
+        while True:
+            ans = input("Is there only 1 player? (Y/N): ").upper()
+            print()
+            if ans.startswith('Y'):
+                self.player2.set_computer()
+            break
 
+        # Set names
+        self.player1.name = input("Player 1 (name): ")
+        print()
+        if self.player2.is_human:
+            self.player2.name = input("Player 2 (name): ")
+            print()
 
-# class Debug():
+        # Set symbols
+        while True:
+            ans = input(f"{self.player1.name} - X or O? (X/O): ").upper()
+            print()
+            if ans == 'X' or ans == 'O':
+                self.player1.symbol = ans
+                break
+            else:
+                print("Choose X or O")
+                print()
 
-#     # Test board initialization
-#     def __init__(self) -> object:
-#         self.debug = Board()
+        # Choose turn
+        while True:
+            ans = input(f"Does {self.player1.name}(1) or {self.player2.name}(2) go first? (1/2): ")
+            print()
+            if ans == '1':
+                self.player1.is_turn = True
+                self.player2.is_turn = False
+                break
+            elif ans == '2':
+                self.player1.is_turn = False
+                self.player2.is_turn = True
+                break
+            else:
+                print("Type 1 or 2")
+    
+    # Set up board
+    def board_setup(self):
+        while True:
+            try:
+                size = input("Choose a board size: ")
+            except ValueError:
+                print("Give a number")
+            else:
+                break
 
-#     # Test board print    
-#     def board(self):
-#         debug.print_board()
+    # Make a play
+    def play_turns(self, curr_player: object, next_player: object):
+        
+        # BUG: make_move() accepts list[int, int], not str
 
+        # First player
+        if curr_player.is_human:
+            choice = input(f"{curr_player.name} pick an option (1-{len(self.board)}): ")
+        else:
+            choice = self.random_move()
+        self.board.make_move(choice, curr_player.symbol)
 
-# DEBUG
-x = Board()
+        # Print board
+        self.game_board.print_board()
 
-x.print_board()
+        # Second player
+        if next_player.is_human:
+            choice = input(f"{next_player.name} pick an option (1-{len(self.board)}): ")
+        else:
+            choice = self.random_move()
+        self.board.make_move(choice, next_player.symbol)
+
+        # Print board
+        self.game_board.print_board()
+
+    # Run game
+    def run(self):
+
+        print("Game start!")
+        print()
+
+        if self.player1.is_turn:
+            self.play_turns(self.player1, self.player2)
+        else:
+            self.play_turns(self.player2, self.player1)
+        
+        # Swap turns
+        self.swap_turns()
+
+# TODO: Finish AI implementation
+# TODO: Fix bug with choice
+# TODO: Check whether passing obj works
+# TODO: Implement game loop
+# TODO: Implement reset
+# TODO: Test
+# TODO: Implement unit testing
